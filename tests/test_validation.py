@@ -2,6 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas import GenerationJobCreate
+from app.job_service import validate_recipient
 
 
 def test_valid_generation_request():
@@ -25,19 +26,12 @@ def test_valid_generation_request():
 
 def test_invalid_email():
 
-    data = {
-        "event_name": "Python Bootcamp 2026",
-        "completion_date": "2026-10-31",
-        "recipients": [
-            {
-                "name": "Priyanshi Sharma",
-                "email": "invalid-email"
-            }
-        ]
-    }
+    error = validate_recipient(
+        name="Priyanshi Sharma",
+        email="invalid-email"
+    )
 
-    with pytest.raises(ValidationError):
-        GenerationJobCreate(**data)
+    assert error == "Invalid email address."
 
 
 def test_empty_recipients():
@@ -50,3 +44,13 @@ def test_empty_recipients():
 
     with pytest.raises(ValidationError):
         GenerationJobCreate(**data)
+
+
+def test_empty_recipient_name():
+
+    error = validate_recipient(
+        name="",
+        email="priya@example.com"
+    )
+
+    assert error == "Recipient name is required."

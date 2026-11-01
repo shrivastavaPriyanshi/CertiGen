@@ -3,7 +3,10 @@ from app.database import engine, Base
 from app import models
 from app.models import GenerationJob, Recipient
 from app.schemas import JobStatusResponse
+from pathlib import Path
 
+from fastapi.responses import FileResponse
+from app.schemas import RecipientResponse
 from fastapi import Depends, BackgroundTasks, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -113,3 +116,71 @@ def get_job_status(
         "status": job.status,
         "recipients": recipients
     }
+
+@app.get(
+    "/api/jobs/{job_id}/certificates",
+    response_model=list[RecipientResponse]
+)
+def get_job_certificates(
+    job_id: str,
+    db: Session = Depends(get_db)
+):
+
+    # Check whether job exists
+    job = db.query(GenerationJob).filter(
+        GenerationJob.id == job_id
+    ).first()
+
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="Generation job not found"
+        )
+
+    # Retrieve all recipients of this job
+    recipients = db.query(Recipient).filter(
+        Recipient.job_id == job_id
+    ).all()
+
+    return recipients
+
+@app.get("/api/certificates/{certificate_id}/download")
+def download_certificate(
+    certificate_id: str,
+    db: Session = Depends(get_db)
+):
+
+    # Find recipient record
+    recipient = db.query(Recipient).filter(
+        Recipient.id == certificate_id
+    ).first()
+
+    if not recipient:
+        raise HTTPException(
+            status_code=404,
+            detail="Certificate not found"
+        )
+
+    # Check generation status
+    if recipient.status != "completed":
+        raise HTTPException(
+            status_code=404,
+            detail="Certificate has not been generated successfully"
+        )
+
+    # Get certificate file path
+    file_path = Path(recipient.certificate_path)
+
+    # Check whether PDF exists
+    if not file_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="Certificate file not found"
+        )
+
+    # Return PDF file
+    return FileResponse(
+        path=str(file_path),
+        media_type="application/pdf",
+        filename=f"certificate_{recipient.id}.pdf"
+    )

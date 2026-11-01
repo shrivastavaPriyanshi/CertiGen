@@ -72,6 +72,28 @@ def create_job(
             status_code=500,
             detail=f"Could not create generation job: {str(error)}"
         )
+
+
+@app.get(
+    "/api/jobs"
+)
+def get_all_jobs(db: Session = Depends(get_db)):
+    jobs = db.query(GenerationJob).order_by(GenerationJob.created_at.desc()).all()
+    return [
+        {
+            "job_id": job.id,
+            "event_name": job.event_name,
+            "completion_date": str(job.completion_date) if job.completion_date else None,
+            "total_recipients": job.total_recipients,
+            "successful_count": job.successful_count,
+            "failed_count": job.failed_count,
+            "status": job.status,
+            "created_at": job.created_at.isoformat() if job.created_at else None
+        }
+        for job in jobs
+    ]
+
+
 @app.get(
     "/api/jobs/{job_id}",
     response_model=JobStatusResponse

@@ -1,108 +1,50 @@
-# Python cache files
+# Python Cache & Virtual Environments
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Virtual environment
 venv/
 .venv/
 env/
 
-# Environment variables and secrets
-.env
-.env.*
-!.env.example
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# Generated certificates
-generated_certificates/
-*.pdf
-
-# Pytest cache and coverage
-.pytest_cache/
-.coverage
-htmlcov/
-
-# IDE settings
-.vscode/
-.idea/
-
-# Operating system files
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-
-# Build files
-build/
-dist/
-*.egg-info/
-
-# ==========================================
-# Python Backend & Virtual Environment
-# ==========================================
-venv/
-.venv/
-env/
-__pycache__/
-*.py[cod]
-*$py.class
-
-# ==========================================
-# Node / Frontend Dependencies & Builds
-# ==========================================
+# Node.js / React / Vite
 node_modules/
-frontend/node_modules/
-dist/
 frontend/dist/
+dist/
 dist-ssr/
 *.local
 
-# ==========================================
 # Environment Variables & Secrets
-# ==========================================
 .env
 .env.*
-frontend/.env
-frontend/.env.*
 !.env.example
-!frontend/.env.example
 
-# ==========================================
-# Databases & Generated Application Artifacts
-# ==========================================
+# Databases
 *.db
 *.sqlite
 *.sqlite3
-certigen.db
-generated_certificates/
-*.pdf
 
-# ==========================================
-# Testing & Code Coverage
-# ==========================================
+# Generated Certificates
+generated_certificates/
+generated_certificates/*.pdf
+
+# Testing & Coverage
 .pytest_cache/
 .coverage
 htmlcov/
 
-# ==========================================
 # Logs
-# ==========================================
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# ==========================================
-# IDE & Operating System Files
-# ==========================================
+# IDE & Operating System
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Build Artifacts
+build/
+*.egg-info/

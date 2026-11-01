@@ -1,31 +1,69 @@
 # CertiGen – Bulk Certificate Generator
 
-A Python-based REST API that automates the generation of certificates in bulk using a predefined PDF template. CertiGen allows users to submit multiple recipient details in a single request, validate recipient information, track generation progress, and download generated certificates.
+**A Python-based REST API for automated bulk PDF certificate generation.**
 
-## 🚀 Features
+CertiGen is a backend application built with FastAPI that simplifies the process of generating certificates for multiple recipients. It accepts bulk recipient information through a single API request, validates individual records, generates personalized PDF certificates, and tracks the progress of each generation job.
 
-- **Bulk Certificate Generation:** Generate certificates for multiple recipients through a single API request.
-- **Input Validation:** Validate recipient names and email addresses.
-- **PDF Generation:** Generate personalized PDF certificates using a predefined template.
+The application uses background processing and individual error handling to ensure that an invalid recipient does not interrupt certificate generation for other recipients.
+
+---
+
+## ✨ Key Features
+
+- **Bulk Generation:** Submit multiple recipients in a single API request.
+- **Recipient Validation:** Validate recipient names and email addresses before generating certificates.
+- **Automated PDF Generation:** Create personalized PDF certificates programmatically using ReportLab.
 - **Background Processing:** Process certificate generation asynchronously using FastAPI BackgroundTasks.
-- **Job Tracking:** Track job status, total recipients, successful generations, and failures.
-- **Individual Error Handling:** A failure for one recipient does not interrupt processing for other recipients.
-- **Certificate Retrieval:** Retrieve certificate records associated with a generation job.
-- **PDF Download:** Download successfully generated certificates through an API endpoint.
-- **API Documentation:** Interactive API documentation using Swagger UI.
+- **Job Tracking:** Monitor generation status, total recipients, successful certificates, and failed records.
+- **Individual Error Handling:** Handle recipient-level failures without stopping the entire generation process.
+- **Certificate Management:** Retrieve certificate records associated with a generation job.
+- **PDF Downloads:** Download successfully generated certificates through dedicated API endpoints.
+- **Interactive API Documentation:** Explore and test endpoints using Swagger UI.
 
 ## 🛠️ Tech Stack
 
-| Technology | Purpose |
+| Technology | Usage |
 |---|---|
 | Python | Backend programming |
 | FastAPI | REST API development |
 | SQLite | Relational database |
-| SQLAlchemy | ORM and database operations |
+| SQLAlchemy | Database ORM |
 | Pydantic | Request validation and data schemas |
 | ReportLab | PDF certificate generation |
 | Pytest | Automated testing |
-| Uvicorn | ASGI server |
+| Uvicorn | ASGI application server |
+
+## 🏗️ Project Architecture
+
+```text
+Client / Swagger UI
+        |
+        v
+    FastAPI
+        |
+        v
+   API Endpoints
+        |
+        v
+   Job Service
+        |
+        +----------------------+
+        |                      |
+        v                      v
+Recipient Validation     Background Processing
+                               |
+                               v
+                       Certificate Service
+                               |
+                               v
+                         ReportLab PDF
+                               |
+                               v
+                     Generated Certificates
+                               |
+                               v
+                         SQLite Database
+```
 
 ## 📁 Project Structure
 
@@ -34,21 +72,21 @@ CertiGen/
 │
 ├── app/
 │   ├── __init__.py
-│   ├── main.py
-│   ├── database.py
-│   ├── models.py
-│   ├── schemas.py
-│   ├── certificate_service.py
-│   └── job_service.py
+│   ├── main.py                 # FastAPI application and API routes
+│   ├── database.py             # Database connection and session
+│   ├── models.py               # SQLAlchemy database models
+│   ├── schemas.py              # Pydantic request and response schemas
+│   ├── certificate_service.py  # PDF certificate generation
+│   └── job_service.py          # Job creation, validation and processing
 │
 ├── tests/
-│   ├── test_validation.py
-│   ├── test_generation.py
-│   ├── test_status.py
-│   └── test_download.py
+│   ├── test_validation.py      # Input validation tests
+│   ├── test_generation.py      # Certificate generation tests
+│   ├── test_status.py          # Job status tests
+│   └── test_download.py        # Certificate listing and download tests
 │
-├── templates/
-├── generated_certificates/
+├── templates/                  # Template assets, if used
+├── generated_certificates/     # Generated PDF output
 │
 ├── requirements.txt
 ├── pytest.ini
@@ -58,10 +96,16 @@ CertiGen/
 
 ## ⚙️ Installation and Setup
 
+### Prerequisites
+
+- Python 3.10 or later
+- Git
+- Visual Studio Code or another code editor
+
 ### 1. Clone the repository
 
 ```bash
-git clone <your-github-repository-url>
+git clone https://github.com/shrivastavaPriyanshi/CertiGen.git
 cd CertiGen
 ```
 
@@ -79,7 +123,7 @@ python -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
 
-**macOS/Linux:**
+**macOS / Linux:**
 
 ```bash
 source venv/bin/activate
@@ -91,38 +135,42 @@ source venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-### 5. Start the application
+### 5. Run the application
 
 ```bash
 python -m uvicorn app.main:app --reload
 ```
 
-The application will be available at:
+The API server will start at:
 
 `http://127.0.0.1:8000`
 
-### 6. Open Swagger API Documentation
+### 6. Access API documentation
+
+Open Swagger UI in your browser:
 
 `http://127.0.0.1:8000/docs`
 
-Use Swagger UI to interact with and test the available API endpoints.
+You can explore endpoints, submit requests, and test API responses directly through the interactive documentation.
 
-## 📡 API Endpoints
+---
 
-| Method | Endpoint | Description |
+## 📡 API Documentation
+
+| HTTP Method | Endpoint | Description |
 |---|---|---|
-| GET | `/` | Home endpoint |
+| GET | `/` | Application welcome endpoint |
 | GET | `/health` | Health check |
 | POST | `/api/jobs` | Create a bulk certificate generation job |
 | GET | `/api/jobs/{job_id}` | Retrieve job status and progress |
 | GET | `/api/jobs/{job_id}/certificates` | Retrieve certificates associated with a job |
 | GET | `/api/certificates/{certificate_id}/download` | Download a generated PDF certificate |
 
-### Example: Create a Generation Job
+### 1. Create a Generation Job
 
 **POST** `/api/jobs`
 
-Request body:
+Example request:
 
 ```json
 {
@@ -156,49 +204,109 @@ Example response:
 }
 ```
 
-Use the returned `job_id` to track progress and retrieve generated certificates.
+The API returns a job ID that can be used to track generation progress and retrieve certificates.
 
-## 📊 Job Processing Status
+### 2. Track Generation Status
 
-The application tracks the generation process using job and recipient statuses.
+**GET** `/api/jobs/{job_id}`
 
-- `queued` – Job has been created.
-- `processing` – Certificates are being generated.
-- `completed` – All recipients were processed successfully.
-- `completed_with_errors` – Processing finished with one or more failures.
+Returns:
+- Job information
+- Total recipients
+- Successful certificate count
+- Failed recipient count
+- Pending recipient count
+- Overall job status
+- Individual recipient records
 
-Individual recipients are tracked as pending, completed, or failed.
+### 3. Retrieve Generated Certificates
 
-## 🧪 Running Tests
+**GET** `/api/jobs/{job_id}/certificates`
 
-Run the automated test suite using:
+Returns recipient and certificate information associated with the specified job.
+
+### 4. Download a Certificate
+
+**GET** `/api/certificates/{certificate_id}/download`
+
+Returns the generated certificate as a PDF file when generation has completed successfully.
+
+---
+
+## 📊 Job and Recipient Status
+
+### Job Status
+
+| Status | Description |
+|---|---|
+| `queued` | Job has been created and is awaiting processing. |
+| `processing` | Certificate generation is in progress. |
+| `completed` | All recipients were processed successfully. |
+| `completed_with_errors` | Processing finished with one or more recipient failures. |
+
+### Recipient Status
+
+| Status | Description |
+|---|---|
+| `pending` | Certificate generation is awaiting processing. |
+| `completed` | Certificate was generated successfully. |
+| `failed` | Validation or certificate generation failed. |
+
+## 🧪 Testing
+
+CertiGen includes automated tests using Pytest.
+
+Run the test suite:
 
 ```bash
 python -m pytest -v
 ```
 
-The project currently includes **10 passing automated tests** covering:
+### Test Coverage
 
-- Request and recipient validation.
-- Empty recipient list handling.
-- Certificate PDF generation.
-- Job status retrieval.
-- Certificate listing.
-- Certificate downloading.
-- Invalid job and certificate IDs.
+- Valid generation request
+- Invalid email validation
+- Empty recipient list validation
+- Empty recipient name validation
+- PDF certificate generation
+- Job status endpoint
+- Certificate listing endpoint
+- Successful certificate download
+- Invalid certificate ID handling
+- Invalid job ID handling
 
-## 🔮 Future Improvements
+**Latest local test result: 10 passed.**
 
-- Integrate a durable task queue such as Celery with Redis for production-grade background processing.
-- Add user authentication and authorization.
-- Support customizable certificate templates.
-- Add email delivery of generated certificates.
-- Introduce an AI-powered assistant for natural-language certificate generation requests.
+## 🔒 Error Handling and Reliability
 
-## 👩‍💻 Project Information
+- Recipient information is validated individually.
+- Invalid recipient records are marked as failed.
+- Certificate generation continues for other valid recipients.
+- Job-level progress and recipient-level results are stored in the database.
+- Missing jobs, certificates, or unavailable PDF files return appropriate HTTP error responses.
 
-**Project:** CertiGen – Bulk Certificate Generator  
-**Category:** Backend Development / REST API  
-**Language:** Python  
-**Framework:** FastAPI
+## 🚀 Future Enhancements
+
+Potential improvements for future versions:
+
+- Email delivery of generated certificates.
+- Customizable certificate designs and templates.
+- User authentication and role-based access control.
+- Certificate verification using unique IDs or QR codes.
+- Durable background processing using Celery and Redis.
+- AI-powered assistant for natural-language certificate generation requests.
+
+## 👩‍💻 Author
+
+**Priyanshi Shrivastava**
+
+B.Tech – Computer Science and Engineering
+
+- GitHub: [@shrivastavaPriyanshi](https://github.com/shrivastavaPriyanshi)
+- Project Repository: [CertiGen](https://github.com/shrivastavaPriyanshi/CertiGen)
+
+---
+
+*Built with Python and FastAPI to simplify bulk certificate generation.*
+
 
